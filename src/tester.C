@@ -6,6 +6,10 @@ using namespace std;
 //using namespace idwTest;
 using namespace lwtv;
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 void
 tvecTest()
 {
@@ -261,11 +265,12 @@ tmat4Test(){
 
 }
 
-main()
+int main()
 {
   tvecTest();
   tmat3Test();
   tmat4Test();
+  return 0;
 }
 
 //Copyright 2019 Ivan DeWolf
