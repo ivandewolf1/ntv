@@ -252,8 +252,9 @@ tmat4Test(){
   cout<<"B extracted:"<<B<<"\n\n"<<Trans<<", "<<Rot*(180/M_PI)<<", "<<Scl<<endl;
 
   C.identity();
-  C.rotate(tvec3<double>((-5.0*M_PI/180.0),(-10.0*M_PI/180.0),(-20.0*M_PI/180.0)));
   C.scale(tvec3<double>(2,3,4));
+  C.rotate(tvec3<double>((-5.0*M_PI/180.0),(-10.0*M_PI/180.0),(-20.0*M_PI/180.0)));
+  //C.scale(tvec3<double>(2,3,4));
   C.extract(Trans,Rot,Scl);
   cout<<"C extracted:"<<C<<"\n\n"<<Trans<<", "<<Rot*(180/M_PI)<<", "<<Scl<<endl;
 
