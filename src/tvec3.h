@@ -51,8 +51,8 @@ class tvec3
   tvec3 operator / (const T& s){double s_inv = 1.0/s;return tvec3(n[0]*s_inv, n[1]*s_inv, n[2]*s_inv);}
   friend tvec3 operator / (const T& s, const tvec3& v){return tvec3(s/v.get(0), s/v.get(1), s/v.get(2));}
   // ----------------------------------------------------------------------- equality operators
-  bool operator == (const tvec3& v){return (n[0]==v.get(0)) && (n[1]==v.get(1)) && (n[2]==v.get(2));}
-  bool operator != (const tvec3& v){return !(*this==v);}
+  bool operator == (const tvec3& v)const{return (n[0]==v.get(0)) && (n[1]==v.get(1)) && (n[2]==v.get(2));}
+  bool operator != (const tvec3& v)const{return !(*this==v);}
   // ----------------------------------------------------------------------- utility functions
   // print
   friend std::ostream& operator << (std::ostream& s, const tvec3& v){return s<<"("<<v.get(0)<<", "<<v.get(1)<<", "<<v.get(2)<<")";}
