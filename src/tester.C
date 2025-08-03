@@ -1,10 +1,9 @@
 #include <iostream>
-#include "tmat3.h"
-#include "tmat4.h"
+#include "nmat3.h"
+#include "nmat4.h"
 
 using namespace std;
-//using namespace idwTest;
-using namespace lwtv;
+using namespace ntv;
 
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
@@ -13,12 +12,12 @@ using namespace lwtv;
 void
 tvecTest()
 {
-  cout<<"*************** test tvec3 *********************"<<endl;
+  cout<<"*************** test nvec3 *********************"<<endl;
   cout<<"\nconstructors:"<<endl;
-  tvec3<double> A;
-  tvec3<double> B(.1,.2,.3);
-  tvec3<double> C(.4);
-  tvec3<double> D(B);
+  nvec3<double> A;
+  nvec3<double> B(.1,.2,.3);
+  nvec3<double> C(.4);
+  nvec3<double> D(B);
   cout <<A<<", "<<B<<", "<<C<<", "<<D<<endl;
  //-------------------------------------
    cout<<"\nAssignment operators:"<<endl;
@@ -44,7 +43,7 @@ tvecTest()
   B = A - D;
   C = A * B;
   D = A / B;
-  tvec3<double> E;
+  nvec3<double> E;
   E = -D;
   cout <<A<<", "<<B<<", "<<C<<", "<<D<<", "<<E<<endl;
  //-------------------------------------
@@ -85,17 +84,17 @@ tvecTest()
 }
 
 void
-tmat3Test(){
-  cout<<"\n\n*************** test tmat3 *********************"<<endl;
-  tmat3<double> A;
-  tmat3<double> B;
-  tmat3<double> C;
-  tmat3<double> D;
+nmat3Test(){
+  cout<<"\n\n*************** test nmat3 *********************"<<endl;
+  nmat3<double> A;
+  nmat3<double> B;
+  nmat3<double> C;
+  nmat3<double> D;
   //-------------------------------------
   cout<<"\nAssignment operators:"<<endl;
   A[7] = 3.141;
   A(1,2) = 2.718;
-  tmat3<double> E(A);
+  nmat3<double> E(A);
   B = A;
   C -= A;
   D += A;
@@ -115,8 +114,8 @@ tmat3Test(){
   A(0,2)=-.7071;
   A(2,0)= .7071;
   A(2,2)= .7071;
-  tvec3<double> VA(1,0,0);
-  tvec3<double> VB, VC;
+  nvec3<double> VA(1,0,0);
+  nvec3<double> VB, VC;
   VB = A * VA;// A is a 45 degree turn around the Y axis
   cout <<A<<",\n"<<VA<<" "<<VB<<endl;
   //-------------------------------------
@@ -147,7 +146,7 @@ tmat3Test(){
   cout<<"\nutility functions:"<<endl;
   B.identity();
   C.identity();
-  tvec3<double> axis(0,1,0);
+  nvec3<double> axis(0,1,0);
   C.rotate(axis, (45.0*M_PI/180.0));
   A.transpose();
   double det =  D.determinant();
@@ -155,12 +154,12 @@ tmat3Test(){
 }
 
 void
-tmat4Test(){
-  cout<<"\n\n*************** test tmat4 *********************"<<endl;
-  tmat4<double> A;
-  tmat4<double> B(3.14);
-  tmat4<double> C(B);
-  tmat4<double> D, E, F, G, H;
+nmat4Test(){
+  cout<<"\n\n*************** test nmat4 *********************"<<endl;
+  nmat4<double> A;
+  nmat4<double> B(3.14);
+  nmat4<double> C(B);
+  nmat4<double> D, E, F, G, H;
   //-------------------------------------
   cout<<"\nAssignment operators:"<<endl;
   A[3] = 3.141;
@@ -184,8 +183,8 @@ tmat4Test(){
   A(2,0)= .7071;
   A(2,2)= .7071;
   H = A;
-  tvec3<double> VA(1,0,0);
-  tvec3<double> VB;
+  nvec3<double> VA(1,0,0);
+  nvec3<double> VB;
   VB = A * VA;// A is a 45 degree turn around the Y axis
   cout <<A<<",\n"<<VA<<" "<<VB<<endl;
   //-------------------------------------
@@ -234,33 +233,33 @@ tmat4Test(){
   cout <<"results:\n"<<A<<", \n"<<B<<", \n"<<det<<", \n"<<D<<", \n"<<E<<", \n"<<F<<", \n"<<G<<", \n"<<H<<endl;
   cout<<"\n\nand:\n"<<endl;
   A.identity();
-  A.rotate(tvec3<double>(1,0,0),(5.0*M_PI/180.0));
+  A.rotate(nvec3<double>(1,0,0),(5.0*M_PI/180.0));
   //cout<<"\nA!"<<A<<endl;
-  //B.setRotation(tvec3<double>(1,0,0),(5.0*M_PI/180.0));
+  //B.setRotation(nvec3<double>(1,0,0),(5.0*M_PI/180.0));
   //C.identity();
   //D = C *B;
   //cout<<"\nD"<<D<<endl;
-  A.rotate(tvec3<double>(0,1,0),(10.0*M_PI/180.0));
-  //A.rotate(tvec3<double>(0,0,1),(3.0*M_PI/180.0));
-  tvec3<double> Trans, Rot, Scl;
+  A.rotate(nvec3<double>(0,1,0),(10.0*M_PI/180.0));
+  //A.rotate(nvec3<double>(0,0,1),(3.0*M_PI/180.0));
+  nvec3<double> Trans, Rot, Scl;
   A.extract(Trans,Rot,Scl);
   cout<<"extracted:"<<A<<"\n\n"<<Trans<<", "<<Rot*(180/M_PI)<<", "<<Scl<<endl;
   B.identity();
-  B.rotate(tvec3<double>((5.0*M_PI/180.0),(10.0*M_PI/180.0),(20.0*M_PI/180.0)));
-  B.scale(tvec3<double>(2,3,4));
+  B.rotate(nvec3<double>((5.0*M_PI/180.0),(10.0*M_PI/180.0),(20.0*M_PI/180.0)));
+  B.scale(nvec3<double>(2,3,4));
   B.extract(Trans,Rot,Scl);
   cout<<"B extracted:"<<B<<"\n\n"<<Trans<<", "<<Rot*(180/M_PI)<<", "<<Scl<<endl;
 
   C.identity();
-  C.scale(tvec3<double>(2,3,4));
-  C.rotate(tvec3<double>((-5.0*M_PI/180.0),(-10.0*M_PI/180.0),(-20.0*M_PI/180.0)));
-  //C.scale(tvec3<double>(2,3,4));
+  C.scale(nvec3<double>(2,3,4));
+  C.rotate(nvec3<double>((-5.0*M_PI/180.0),(-10.0*M_PI/180.0),(-20.0*M_PI/180.0)));
+  //C.scale(nvec3<double>(2,3,4));
   C.extract(Trans,Rot,Scl);
   cout<<"C extracted:"<<C<<"\n\n"<<Trans<<", "<<Rot*(180/M_PI)<<", "<<Scl<<endl;
 
   D.identity();
-  D.rotate(tvec3<double>((0*M_PI/180.0),(0.0*M_PI/180.0),(-90.0*M_PI/180.0)));
-  D.scale(tvec3<double>(2,3,4));
+  D.rotate(nvec3<double>((0*M_PI/180.0),(0.0*M_PI/180.0),(-90.0*M_PI/180.0)));
+  D.scale(nvec3<double>(2,3,4));
   D.extract(Trans,Rot,Scl);
   cout<<"D extracted:"<<D<<"\n\n"<<Trans<<", "<<Rot*(180/M_PI)<<", "<<Scl<<endl;
 
@@ -269,8 +268,8 @@ tmat4Test(){
 int main()
 {
   tvecTest();
-  tmat3Test();
-  tmat4Test();
+  nmat3Test();
+  nmat4Test();
   return 0;
 }
 
