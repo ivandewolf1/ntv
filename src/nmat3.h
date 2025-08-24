@@ -15,6 +15,7 @@
 #include <iostream>
 #include <cmath>
 #include "nvec3.h"
+#include "nquat.h"
 namespace ntv {
 template <typename T>
 class nmat3 // nano matrix 3, 3x3 matrices for geometric transforms
@@ -22,66 +23,69 @@ class nmat3 // nano matrix 3, 3x3 matrices for geometric transforms
  public:
   nmat3(){this->identity();}
   nmat3(nmat3& m){for(int i=0; i<9; ++i)n[i]=m[i];}
-  // Assignment operators
-  nmat3& operator += (const nmat3& m){for(int i=0; i<9; ++i)n[i]+=m.get(i);return *this;}
-  nmat3& operator -= (const nmat3& m){for(int i=0; i<9; ++i)n[i]-=m.get(i);return *this;}
+  nmat3(T zz,T zo,T zt,T oz,T oo,T ot,T tz,T to,T tt) {n(0,0)=zz;n(0,1)=zo;n(0,2)=zt;n(1,0)=oz;n(1,1)=oo;n(1,2)=ot;n(2,0)=tz;n(2,1)=to;n(2,2)=tt;}
+  // ----------------------------------------------- ssignment operators
+  nmat3& operator += (const nmat3& m){for(int i=0; i<9; ++i)n[i]+=m[i];return *this;}
+  nmat3& operator -= (const nmat3& m){for(int i=0; i<9; ++i)n[i]-=m[i];return *this;}
   nmat3& operator *= (const T& s){for(int i=0; i<9; ++i)n[i]*=s;return *this;}
   nmat3& operator /= (const T& s){for(int i=0; i<9; ++i)n[i]/=s;return *this;}
-  T& operator [] (const int i){return n[i];}
-  T& operator() (const int r, const int c){return n[(r*3) + c];}
-  // matrix3 scalar operators
-  friend nmat3 operator * (const nmat3& m, const T& s){nmat3 out;for(int i=0; i<9; ++i)out[i]=m.get(i)*s;return out;}
-  friend nmat3 operator / (const nmat3& m, const T& s){nmat3 out;for(int i=0; i<9; ++i)out[i]=m.get(i)/s;return out;}
-  // matrix3 vector operators
-  nvec3<T> operator * (nvec3<T>& v){nvec3<T> rowX = getRow(0) * v[0]; nvec3<T> rowY = getRow(1) * v[1]; nvec3<T> rowZ = getRow(2) * v[2]; return rowX + rowY + rowZ;}
-  // matrix3 matrix3 operators
-  nmat3 operator + (const nmat3& m){nmat3 out;for(int i=0; i<9; ++i)out[i]=n[i]+m.get(i);return out;}
-  nmat3 operator - (const nmat3& m){nmat3 out;for(int i=0; i<9; ++i)out[i]=n[i]-m.get(i);return out;}
-  friend nmat3 operator * (const nmat3& mA, const nmat3& mB){nmat3 out;for(int i=0;i<3;++i)for(int j=0;j<3;++j)for(int k=0;k<3;++k)out(i,j)=mA.get(i,k)*mB.get(k,j);return out;}
-  // equality functions
-  bool operator == (const nmat3& m){for(int i=0; i<9; ++i)if(n[i]!=m.get(i))return false;return true;}
-  bool operator != (const nmat3& m){return !(*this==m);}
-  // accessor functions,                       are these needed?
-  T get(const int i)const{return n[i];}// get() is const
-  T get(const int r, const int c)const{return n[(r*3) + c];}// get() is const
-  void set(const nvec3<T> a, const nvec3<T> b, const nvec3<T> c){
-    n[0]=a.get(0); n[1]=a.get(1); n[2]=a.get(2);
-    n[3]=b.get(0); n[4]=b.get(1); n[5]=b.get(2);
-    n[6]=c.get(0); n[7]=c.get(1); n[8]=c.get(2);}
-  void setRow(const int i,const nvec3<T> v){n[(3*i)+0]=v.get(0); n[(3*i)+1]=v.get(1); n[(3*i)+2]=v.get(2);}
-  nvec3<T> getRow(const int i){return nvec3<T>(n[(3*i)+0], n[(3*i)+1], n[(3*i)+2]);}
-  // utility functions
+  T& operator [] (int i){return n[i];}
+  const T& operator[](int i)const{return n[i];}
+  T& operator() (int r, int c){return n[(r*3) + c];}
+  const T& operator()(int r, int c)const{return n[(r * 3) + c];}
+  void identity(){n[0]=1;n[1]=0;n[2]=0;n[3]=0;n[4]=1;n[5]=0;n[6]=0;n[7]=0;n[8]=1;}
+  // -------------------------------------------- matrix3 scalar operators
+  friend nmat3 operator*(const nmat3& m,T s){nmat3 out;for(int i=0; i<9; ++i)out[i]=m[i]*s;return out;}
+  friend nmat3 operator/(const nmat3& m,T s){nmat3 out;for(int i=0; i<9; ++i)out[i]=m[i]/s;return out;}
+  // ------------------------------------------- matrix3 vector operators
+  nvec3<T> operator*(nvec3<T>& v)const{nvec3<T> rowX = getRow(0) * v[0]; nvec3<T> rowY = getRow(1) * v[1]; nvec3<T> rowZ = getRow(2) * v[2]; return rowX + rowY + rowZ;}
+  // ----------------------------------------- matrix3 quaternion operators
+  void fromNquat(nquat<T> q) const {T x2 = q[1] * q[1], y2 = q[2] * q[2], z2 = q[3] * q[3];T sx = q[0] * q[1], sy = q[0] * q[2], sz = q[0] * q[3];T xz = q[1] * q[3], yz = q[2] * q[3], xy = q[1] * q[2];
+    n[0]=1-2*(y2+z2); n[1]=2*(xy+sz); n[2]=2*(xz-sy);
+    n[3]=2*(xy-sz); n[4]=1-2*(x2+z2); n[5]=2*(sx+yz);
+    n[6]=2*(sy+xz); n[7]=2*(yz-sx); n[8]=1-2*(x2+y2);}
+  nquat<T> toNquat() const {const T trace = get(0, 0) + get(1, 1) + get(2, 2);
+    if(trace>0){T s=sqrt(trace + 1)*2;T oneOverS=1/s;return nquat(0.25*s,(n[5]-n[7])*oneOverS,(n[6]-n[2])*oneOverS,(n[1]-n[3])*oneOverS);}
+    if(n[0]>n[4]&&n[0]>n[8]){T s=sqrt(n[0]-n[4]-n[8]+1)*2;T oneOverS=1/s;return nquat((n[5]-n[7])*oneOverS,0.25*s,(n[3]+n[1])*oneOverS,(n[6]+n[2])*oneOverS);}
+    if(n[4]>n[8]){T s=sqrt(n[4]-n[0]-n[8]+1)*2;T oneOverS=1/s;return nquat((n[6]-n[2])*oneOverS,(n[3]+n[1])*oneOverS,0.25*s,(n[5]+n[7])*oneOverS);}
+    T s=sqrt(n[8]-n[0]-n[4]+1)*2;T oneOverS=1/s; return nquat((n[1]-n[3])*oneOverS,(n[6]+n[2])*oneOverS,(n[5]+n[7])*oneOverS,0.25*s);}
+  // ----------------------------------------- matrix3 matrix3 operators
+  nmat3 operator+(const nmat3& m) const {nmat3 out;for(int i=0; i<9; ++i)out[i]=n[i]+m[i];return out;}
+  nmat3 operator-(const nmat3& m) const {nmat3 out;for(int i=0; i<9; ++i)out[i]=n[i]-m[i];return out;}
+  friend nmat3 operator*(const nmat3& mA, const nmat3& mB){nmat3 out;for(int i=0;i<3;++i)for(int j=0;j<3;++j)for(int k=0;k<3;++k)out(i,j)=mA.get(i,k)*mB.get(k,j);return out;}
+  // -------------------------------------------- equality functions
+  bool operator == (const nmat3& m)const{for(int i=0; i<9; ++i)if(n[i]!=m[i])return false;return true;}
+  bool operator != (const nmat3& m)const{return !(*this==m);}
+  // ------------------------------------------ accessor functions
+  T get(int r, int c)const{return n[(r*3) + c];}// get() is const
+  void set(const nvec3<T>& a, const nvec3<T>& b, const nvec3<T>& c){
+    n[0]=a[0]; n[1]=a[1]; n[2]=a[2];
+    n[3]=b[0]; n[4]=b[1]; n[5]=b[2];
+    n[6]=c[0]; n[7]=c[1]; n[8]=c[2];}
+  void setRow(int i,const nvec3<T>& v){n[(3*i)+0]=v[0]; n[(3*i)+1]=v[1]; n[(3*i)+2]=v[2];}
+  nvec3<T> getRow(int i)const{return nvec3<T>(n[(3*i)+0], n[(3*i)+1], n[(3*i)+2]);}
+  // --------------------------------------------- utility functions
   friend std::ostream& operator << (std::ostream& s, const nmat3<T>& m){
     s<<"\n("<<m.n[0]<<", "<<m.n[1]<<", "<<m.n[2]<<")";
     s<<"\n("<<m.n[3]<<", "<<m.n[4]<<", "<<m.n[5]<<")";
     s<<"\n("<<m.n[6]<<", "<<m.n[7]<<", "<<m.n[8]<<")";
     return s;}
-  void identity(){
-    n[0]=1;n[1]=0;n[2]=0;
-    n[3]=0;n[4]=1;n[5]=0;
-    n[6]=0;n[7]=0;n[8]=1;}
-  void rotate(const nvec3<T>& Axis, const T angle) { // assumes your axis is normalized
+  void rotate(const nvec3<T>& Axis, T angle) { // assumes your axis is normalized
     T c = cos(angle); T s = sin(angle); T t = 1.0 - c; nvec3<T> A,B,C;
-    A.set(t*Axis.get(0)*Axis.get(0) + c, t*Axis.get(0)*Axis.get(1) + s*Axis.get(2), t*Axis.get(0)*Axis.get(2) - s*Axis.get(1));
-    B.set(t*Axis.get(0)*Axis.get(1) - s*Axis.get(2), t*Axis.get(1)*Axis.get(1) + c, t*Axis.get(1)*Axis.get(2) + s*Axis.get(0));
-    C.set(t*Axis.get(0)*Axis.get(2) + s*Axis.get(1), t*Axis.get(1)*Axis.get(2) - s*Axis.get(0), t*Axis.get(2)*Axis.get(2) + c);
+    A.set(t*Axis[0]*Axis[0]+c,t*Axis[0]*Axis[1]+s*Axis[2],t*Axis[0]*Axis[2]-s*Axis[1]);
+    B.set(t*Axis[0]*Axis[1]-s*Axis[2],t*Axis[1]*Axis[1]+c,t*Axis[1]*Axis[2]+s*Axis[0]);
+    C.set(t*Axis[0]*Axis[2]+s*Axis[1],t*Axis[1]*Axis[2]-s*Axis[0],t*Axis[2]*Axis[2]+c);
     set(A,B,C);}
   // needs scale function
-  void transpose(){
-    nvec3<T> A, B, C;
-    A.set(n[0],n[3],n[6]);
-    B.set(n[1],n[4],n[7]);
-    C.set(n[2],n[5],n[8]);
-    set(A,B,C);}
-  T determinant2d(const int& a, const int& b, const int& c, const int& d){return n[a] * n[d] - n[c] * n[b];}
-  T determinant(){
-    T ab = determinant2d(3,6,4,7);
-    T ac = determinant2d(3,6,5,8);
-    T bc = determinant2d(4,7,5,8);
-    T a = n[0] * bc;
-    T b = n[1] * ac;
-    T c = n[2] * ab;
-    return a - b + c;}
+  void transpose(){nvec3<T> A,B,C;A.set(n[0],n[3],n[6]);B.set(n[1],n[4],n[7]);C.set(n[2],n[5],n[8]);set(A,B,C);}
+  T determinant2d(int a, int b, int c, int d)const{return n[a] * n[d] - n[c] * n[b];}
+  T determinant()const{T ab=determinant2d(3,6,4,7);T ac=determinant2d(3,6,5,8);T bc=determinant2d(4,7,5,8);
+    T a=n[0]*bc;T b=n[1]*ac;T c=n[2]*ab;return a-b+c;}
+  nmat3<T> inverse()const{T det=determinant();if(det==0)return nmat3<T>();T invDet=1/det;
+    nmat3<T> out;out.n[0]=invDet*(n[4]*n[8]-n[5]*n[7]);out.n[1]=invDet*(n[2]*n[7]-n[1]*n[8]);out.n[2]=invDet*(n[1]*n[5]-n[2]*n[4]);
+    out.n[3]=invDet*(n[5]*n[6]-n[3]*n[8]);out.n[4]=invDet*(n[0]*n[8]-n[2]*n[6]);out.n[5]=invDet*(n[2]*n[3]-n[0]*n[5]);}
+  void lookat(nvec3<T> look) {nvec3<T> lookN = look.Normalized();nquat<T> q;q.RotateFromTo(nvec3(0,0,1), lookN);
+    set((nvec3<T>(1,0,0)*q).normalized(),(nvec3<T>(0,1,0)*q).normalized(),lookN);}
 private:
   T n[9];
 };

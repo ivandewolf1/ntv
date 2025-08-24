@@ -167,8 +167,8 @@ nmat4Test(){
   D = A;
   E -= A;
   F += A;
-  G *= 2;
-  H /= 2;
+  G *= 2.0;
+  H /= 2.0;
   cout <<A<<", \n"<<B<<", \n"<<C<<", \n"<<D<<", \n"<<E<<", \n"<<F<<", \n"<<G<<", \n"<<H<<endl;
   //-------------------------------------
   cout<<"\nmatrix4 scalar operators:"<<endl;
