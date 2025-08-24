@@ -21,20 +21,25 @@ template <typename T>
 class nmat3 // nano matrix 3, 3x3 matrices for geometric transforms
 {
  public:
+  // ------------------------------------------------- constructors
   nmat3(){this->identity();}
   nmat3(nmat3& m){for(int i=0; i<9; ++i)n[i]=m[i];}
   nmat3(T zz,T zo,T zt,T oz,T oo,T ot,T tz,T to,T tt) {n(0,0)=zz;n(0,1)=zo;n(0,2)=zt;n(1,0)=oz;n(1,1)=oo;n(1,2)=ot;n(2,0)=tz;n(2,1)=to;n(2,2)=tt;}
-  // ----------------------------------------------- ssignment operators
-  nmat3& operator += (const nmat3& m){for(int i=0; i<9; ++i)n[i]+=m[i];return *this;}
-  nmat3& operator -= (const nmat3& m){for(int i=0; i<9; ++i)n[i]-=m[i];return *this;}
-  nmat3& operator *= (const T& s){for(int i=0; i<9; ++i)n[i]*=s;return *this;}
-  nmat3& operator /= (const T& s){for(int i=0; i<9; ++i)n[i]/=s;return *this;}
+  // ----------------------------------------------- element access
   T& operator [] (int i){return n[i];}
   const T& operator[](int i)const{return n[i];}
   T& operator() (int r, int c){return n[(r*3) + c];}
   const T& operator()(int r, int c)const{return n[(r * 3) + c];}
-  void identity(){n[0]=1;n[1]=0;n[2]=0;n[3]=0;n[4]=1;n[5]=0;n[6]=0;n[7]=0;n[8]=1;}
+  T get(int r, int c)const{return n[(r*3) + c];}// get() is const
+  void set(const nvec3<T>& a, const nvec3<T>& b, const nvec3<T>& c){
+    n[0]=a[0]; n[1]=a[1]; n[2]=a[2];
+    n[3]=b[0]; n[4]=b[1]; n[5]=b[2];
+    n[6]=c[0]; n[7]=c[1]; n[8]=c[2];}
+  void setRow(int i,const nvec3<T>& v){n[(3*i)+0]=v[0]; n[(3*i)+1]=v[1]; n[(3*i)+2]=v[2];}
+  nvec3<T> getRow(int i)const{return nvec3<T>(n[(3*i)+0], n[(3*i)+1], n[(3*i)+2]);}
   // -------------------------------------------- matrix3 scalar operators
+  nmat3& operator *= (const T& s){for(int i=0; i<9; ++i)n[i]*=s;return *this;}
+  nmat3& operator /= (const T& s){for(int i=0; i<9; ++i)n[i]/=s;return *this;}
   friend nmat3 operator*(const nmat3& m,T s){nmat3 out;for(int i=0; i<9; ++i)out[i]=m[i]*s;return out;}
   friend nmat3 operator/(const nmat3& m,T s){nmat3 out;for(int i=0; i<9; ++i)out[i]=m[i]/s;return out;}
   // ------------------------------------------- matrix3 vector operators
@@ -50,20 +55,17 @@ class nmat3 // nano matrix 3, 3x3 matrices for geometric transforms
     if(n[4]>n[8]){T s=sqrt(n[4]-n[0]-n[8]+1)*2;T oneOverS=1/s;return nquat((n[6]-n[2])*oneOverS,(n[3]+n[1])*oneOverS,0.25*s,(n[5]+n[7])*oneOverS);}
     T s=sqrt(n[8]-n[0]-n[4]+1)*2;T oneOverS=1/s; return nquat((n[1]-n[3])*oneOverS,(n[6]+n[2])*oneOverS,(n[5]+n[7])*oneOverS,0.25*s);}
   // ----------------------------------------- matrix3 matrix3 operators
+  nmat3& operator += (const nmat3& m){for(int i=0; i<9; ++i)n[i]+=m[i];return *this;}
+  nmat3& operator -= (const nmat3& m){for(int i=0; i<9; ++i)n[i]-=m[i];return *this;}
   nmat3 operator+(const nmat3& m) const {nmat3 out;for(int i=0; i<9; ++i)out[i]=n[i]+m[i];return out;}
   nmat3 operator-(const nmat3& m) const {nmat3 out;for(int i=0; i<9; ++i)out[i]=n[i]-m[i];return out;}
   friend nmat3 operator*(const nmat3& mA, const nmat3& mB){nmat3 out;for(int i=0;i<3;++i)for(int j=0;j<3;++j)for(int k=0;k<3;++k)out(i,j)=mA.get(i,k)*mB.get(k,j);return out;}
   // -------------------------------------------- equality functions
   bool operator == (const nmat3& m)const{for(int i=0; i<9; ++i)if(n[i]!=m[i])return false;return true;}
   bool operator != (const nmat3& m)const{return !(*this==m);}
-  // ------------------------------------------ accessor functions
-  T get(int r, int c)const{return n[(r*3) + c];}// get() is const
-  void set(const nvec3<T>& a, const nvec3<T>& b, const nvec3<T>& c){
-    n[0]=a[0]; n[1]=a[1]; n[2]=a[2];
-    n[3]=b[0]; n[4]=b[1]; n[5]=b[2];
-    n[6]=c[0]; n[7]=c[1]; n[8]=c[2];}
-  void setRow(int i,const nvec3<T>& v){n[(3*i)+0]=v[0]; n[(3*i)+1]=v[1]; n[(3*i)+2]=v[2];}
-  nvec3<T> getRow(int i)const{return nvec3<T>(n[(3*i)+0], n[(3*i)+1], n[(3*i)+2]);}
+  // ---------------------------------------------- mutators
+  void identity(){n[0]=1;n[1]=0;n[2]=0;n[3]=0;n[4]=1;n[5]=0;n[6]=0;n[7]=0;n[8]=1;}
+  void transpose(){nvec3<T> A,B,C;A.set(n[0],n[3],n[6]);B.set(n[1],n[4],n[7]);C.set(n[2],n[5],n[8]);set(A,B,C);}
   // --------------------------------------------- utility functions
   friend std::ostream& operator << (std::ostream& s, const nmat3<T>& m){
     s<<"\n("<<m.n[0]<<", "<<m.n[1]<<", "<<m.n[2]<<")";
@@ -76,8 +78,6 @@ class nmat3 // nano matrix 3, 3x3 matrices for geometric transforms
     B.set(t*Axis[0]*Axis[1]-s*Axis[2],t*Axis[1]*Axis[1]+c,t*Axis[1]*Axis[2]+s*Axis[0]);
     C.set(t*Axis[0]*Axis[2]+s*Axis[1],t*Axis[1]*Axis[2]-s*Axis[0],t*Axis[2]*Axis[2]+c);
     set(A,B,C);}
-  // needs scale function
-  void transpose(){nvec3<T> A,B,C;A.set(n[0],n[3],n[6]);B.set(n[1],n[4],n[7]);C.set(n[2],n[5],n[8]);set(A,B,C);}
   T determinant2d(int a, int b, int c, int d)const{return n[a] * n[d] - n[c] * n[b];}
   T determinant()const{T ab=determinant2d(3,6,4,7);T ac=determinant2d(3,6,5,8);T bc=determinant2d(4,7,5,8);
     T a=n[0]*bc;T b=n[1]*ac;T c=n[2]*ab;return a-b+c;}

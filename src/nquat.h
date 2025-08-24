@@ -23,35 +23,36 @@ namespace ntv {
     public:
         // ------------------------------------------------- constructors
         nquat(){this->identity();}
-        nquat(T r, T i, T j, T k){n[0]=r;n[1]=i;n[2]=j;n[3]=k;}
-        nquat(T r, nvec3<T> ijk){n[0]=r;n[1]=ijk[0];n[2]=ijk[1];n[3]=ijk[2];}
-        // ----------------------------------------------- assignment operators
+        nquat(T r,T i,T j,T k)noexcept:n{r, i, j, k} {}
+        nquat(T r,nvec3<T> ijk)noexcept:n{r, ijk[0], ijk[1], ijk[2]} {}
+        // ----------------------------------------------- element access operators
         T& operator [] (int i){return n[i];}
         const T& operator[](int i)const{return n[i];}
+        void set(T r, const nvec3<T> ijk)noexcept{n[0]=r;n[1]=ijk[0];n[2]=ijk[1];n[3]=ijk[2];}
+        T real()const noexcept{return n[0];}//real, scalar component of this quaternion
+        nvec3<T> imag()const noexcept{return nvec3<T>(n[1],n[2],n[3]);}//imaginary, vector component of this quaternion
+        // ---------------------------------------------- mutators
         nquat& operator *= (const T& s){n[0]*=s;n[1]*=s;n[2]*=s;n[3]*=s;return *this;}
-        void identity(){n[0]=1;n[1]=0;n[2]=0;n[3]=0;}
-        void normalize(){T length = sqrt(this->dot(*this));*this*=1/length;}
-        void set(T r, nvec3<T> ijk){n[0]=r;n[1]=ijk[0];n[2]=ijk[1];n[3]=ijk[2];}
+        void identity()noexcept{n[0]=1;n[1]=0;n[2]=0;n[3]=0;}
+        void normalize(){*this=this->normalized();}
         void fromAxisAngle(const nvec3<T>& axis, T angle){T halfAngle=0.5*angle;set(cos(halfAngle),axis.Normalized()*sin(halfAngle));}
         // ----------------------------------------------- builders
-        nquat normalized()const{return nquat(*this).normalize();}
-        nquat inverse(){return nquat(n[0], -n[1], -n[2], -n[3]);}
-        T real()const{return n[0];}//real, scalar component of this quaternion
-        nvec3<T> imag()const{return nvec3<T>(n[1],n[2],n[3]);}//imaginary, vector component of this quaternion
-        // -------------------------------------------- quaternion scalar operators
-        friend nquat operator*(const T s){nvec3<T> axis;T angle;toAxisAngle(axis,angle);return nquat().fromAxisAngle(axis,angle*s);}
-        // ------------------------------------------- quaternion vector operators
-        nvec3<T> operator*(nvec3<T>& v)const{T rr=n[0]+n[0];return rr*imag().cross(v)+(rr*n[0]-1)*v+2*imag().dot(v)*imag();}
-        // ----------------------------------------- quaternion quaternion operators
+        nquat normalized()const{nquat q(*this);q*=1/q.length();return q;}// assuumes nonzero length
+        nquat conjugate()const noexcept{return nquat(n[0], -n[1], -n[2], -n[3]);}// assumes unit length input
+        // ------------------------------------------- quaternion vector operator (rotate vector)
+        nvec3<T> operator*(const nvec3<T>& v)const{T rr=n[0]+n[0];return rr*imag().cross(v)+(rr*n[0]-1)*v+2*imag().dot(v)*imag();}
+        // ----------------------------------------- quaternion quaternion operator
         friend nquat operator*(const nquat& qA,const nquat& qB){return nquat(qA.dot(qB),qA.real()*qB.real()+qB.real()*qA.imag()+qA.imag().cross(qB.imag()));}
-        // -------------------------------------------- equality functions
         // --------------------------------------------- utility functions
-        T dot(const nquat& qB)const{return real()*qB.real()+imag().dot(qB.imag());}
-        void toAxisAngle(nvec3<T>& axis, T& angle){*axis=real()>0?imag():-imag();*angle=2.0*atan2(axis.normalized(),real()>0?real():-real());}
-        const nquat slerp(const nquat& q2,T tau) {
-            if(this->dot(q2)>0.999999f)return nquat(this*(1-tau)+q2*tau);return this*((this.inverse() * q2) * tau);}
-        nvec3<T> perpendicular(nvec3<T> v){nvec3<T> axis = nvec3(1,0,0).cross(v);if(axis.length2()<0.05)axis=nvec3(0,1,0).cross(v);return axis;}
-        void RotateFromTo(const nvec3<T> v1, const nvec3<T> v2) {
+        friend std::ostream& operator << (std::ostream& s, const nquat<T>& q){s<<"\n("<<q.n[0]<<", "<<q.n[1]<<", "<<q.n[2]<<")"<<", "<<q.n[3]<<")";return s;}
+        T length2() const noexcept {return n[0]*n[0] + n[1]*n[1] + n[2]*n[2] + n[3]*n[3];}
+        T length() const noexcept {return std::sqrt(length2());}
+        T dot(const nquat& qB)const noexcept{return real()*qB.real()+imag().dot(qB.imag());}
+        nquat scaleAngle(T s)const {nvec3<T> axis;T angle;toAxisAngle(axis,angle);nquat q(*this);q.fromAxisAngle(axis,angle*s);return q;}
+        void toAxisAngle(nvec3<T>& axis, T& angle)const{axis=real()>0?imag():-imag();angle=2.0*atan2(axis.normalized(),real()>0?real():-real());}
+        nquat slerp(const nquat& q2,T tau)const{if(*this.dot(q2)>0.999999f)return nquat(*this*(1-tau)+q2*tau);return *this*((*this.conjugate() * q2) * tau);}
+        nvec3<T> perpendicular(const nvec3<T>& v)const{nvec3<T> axis = nvec3(1,0,0).cross(v);if(axis.length2()<0.05)axis=nvec3(0,1,0).cross(v);return axis;}
+        void RotateFromTo(const nvec3<T>& v1, const nvec3<T>& v2) {
             nvec3<T> start = v1.Normalized();nvec3<T> end = v2.Normalized();T dot_product = start.dot(end);
             if (dot_product >= 0.99999847691) {identity();return;}if (dot_product <= -0.99999847691) {perpendicular(start);return;}
             nvec3<T> crossProd = start.cross(end);set(1.0 + dot_product, crossProd);normalize();}

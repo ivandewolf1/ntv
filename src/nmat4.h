@@ -15,17 +15,18 @@
 #include <iostream>
 #include <math.h>
 #include "nvec3.h"
+#include "nmat3.h"
 namespace ntv {
 template <typename T>
 class nmat4 // nano matrix 4, 4x4 matrices for geometric transforms
 {
 public:
-  // ######################################## constructors
+  // ------------------------------------------------- constructors
   nmat4(){this->identity();}
   nmat4(const T& s){for(int i=0; i<16; ++i)n[i]=s;}
   nmat4(const nmat4& m){for(int i=0; i<16; ++i)n[i]=m[i];}
   nmat4(const nmat3<T>& m){for(int i=0; i<3; ++i)for(int j=0; j<3; ++j)n(i,j)=m(i,j);}
-  // ######################################## Assignment operators
+  // ----------------------------------------------- element access
   nmat4& operator += (const nmat4& m){for(int i=0; i<16; ++i)n[i]+=m[i];return *this;}
   nmat4& operator -= (const nmat4& m){for(int i=0; i<16; ++i)n[i]-=m[i];return *this;}
   nmat4& operator *= (const T& s){for(int i=0; i<16; ++i)n[i]*=s;return *this;}
@@ -34,26 +35,28 @@ public:
   const T& operator [] (int i)const{return n[i];}
   T& operator()(int r, int c){return n[(r*4) + c];}
   const T& operator()(int r, int c)const{return n[(r*4) + c];}
-  // ######################################## matrix4 scalar operators
+  // ---------------------------------------------- matrix4 scalar operators
   friend nmat4 operator*(const nmat4& m, T s){nmat4 out;for(int i=0; i<16; ++i)out[i]=m[i]*s;return out;}
   friend nmat4 operator/(const nmat4& m, T s){nmat4 out;for(int i=0; i<16; ++i)out[i]=m[i]/s;return out;}
-  // ######################################## matrix4 vector operators
+  // ------------------------------------------------ matrix4 vector operators
   T rowVMult(int index, const nvec3<T>& v)const{T out = T(0.0);for(int i=0;i<3;++i)out+=n[(index*4)+i]*v[i];return out+n[(index*4)+3];}// perhaps private?
   friend nvec3<T> operator*(const nmat4& m, const nvec3<T>& v){nvec3<T> out;for(int i=0;i<3;++i)out[i]=m.rowVMult(i,v);return out/m.rowVMult(3,v);}
-  // ######################################## matrix4 matrix4 operators
+  // ------------------------------------------- matrix4 matrix3 operator
+  nmat4 operator=(const nmat3<T>& m)const{nmat4 out;for(int i=0; i<3; ++i)for(int j=0; j<3; ++j)out(i,j)=m(i,j);;return out;}
+  // ------------------------------------------- matrix4 matrix4 operators
   nmat4 operator+(const nmat4& m)const{nmat4 out;for(int i=0; i<16; ++i)out[i]=n[i]+m[i];return out;}
   nmat4 operator-(const nmat4& m)const{nmat4 out;for(int i=0; i<16; ++i)out[i]=n[i]-m[i];return out;}
   friend nmat4 operator*(const nmat4& mA, const nmat4& mB){nmat4 out(0);for(int i=0;i<4;++i)for(int j=0;j<4;++j)for(int k=0;k<4;++k)out(i,j)+=mA.get(i,k)*mB.get(k,j);return out;}
-  // ######################################## equality operators
+  // ---------------------------------------- equality operators
   bool operator==(const nmat4& m)const{for(int i=0; i<16; ++i)if(n[i]!=m[i])return false;return true;}
   bool operator!=(const nmat4& m)const{return !(*this==m);}
-  // ######################################## accessor functions
+  // ----------------------------------------- accessor functions
   const T& get(int r, int c)const{return (n[(r*4) + c]);}
   nvec3<T> getRowVec3(int index)const{nvec3<T> out; for(int i=0; i<3; ++i)out[i]=get(index, i);return out;}
   nvec3<T> getColVec3(int index)const{nvec3<T> out; for(int i=0; i<3; ++i)out[i]=get(i, index);return out;}
   void set(const nmat4& m){for(int i=0; i<16; ++i){n[i]=m[i];}}
   void setVecRow(int i,const nvec3<T> v){n[(4*i)+0]=v[0]; n[(4*i)+1]=v[1]; n[(4*i)+2]=v[2];}
-  // ######################################## utility functions
+  // ------------------------------------------ utility functions
   friend std::ostream& operator << (std::ostream& s, const nmat4& m){
     s<<"\n("<<m.n[0]<<", "<<m.n[1]<<", "<<m.n[2]<<", "<<m.n[3]<<")";
     s<<"\n("<<m.n[4]<<", "<<m.n[5]<<", "<<m.n[6]<<", "<<m.n[7]<<")";
@@ -135,6 +138,7 @@ public:
     T cosXangle = cos(-Rot[0]);
     Rot[2] = -atan2(cosXangle * (get(1,0)/Scl[0]) + sinXangle * (get(2,0)/Scl[0]), cosXangle * (get(1,1)/Scl[1]) + sinXangle * (get(2,1)/Scl[1]));
   }
+  void lookat(const nvec3<T>& from, const nvec3<T>& to){nvec3<T> look=(to-from).normalized();nmat3<T> m3;m3.lookat(look);*this=m3;*this.translate(from);}
 private:
   T n[16];
 };

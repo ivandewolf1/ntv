@@ -20,52 +20,54 @@ class nvec3
 {
  public:
   // ----------------------------------------------------------------------- constructors
-  nvec3(){n[0]=n[1]=n[2]=0;}
-  nvec3(const T& x, const T& y, const T& z){n[0] = x; n[1] = y; n[2] = z;}
-  nvec3(const T& s){n[0]=n[1]=n[2]=s;}
-  nvec3(const nvec3& v){n[0]=v.get(0);n[1]=v.get(1);n[2]=v.get(2);}
-  // ----------------------------------------------------------------- assignment operators
-  nvec3& operator += (const nvec3& v){n[0]+=v.get(0); n[1]+=v.get(1); n[2]+=v.get(2); return *this;}
-  nvec3& operator -= (const nvec3& v){n[0]-=v.get(0); n[1]-=v.get(1); n[2]-=v.get(2); return *this;}
-  nvec3& operator *= (const nvec3& v){n[0]*=v.get(0); n[1]*=v.get(1); n[2]*=v.get(2); return *this;}
-  nvec3& operator /= (const nvec3& v){n[0]/=v.get(0); n[1]/=v.get(1); n[2]/=v.get(2); return *this;}
-  nvec3& operator *= (T& s){n[0]*=s; n[1]*=s; n[2]*=s; return *this;}
-  nvec3& operator /= (T& s){auto s_inv = 1.0/s; n[0]*=s_inv; n[1]*=s_inv; n[2]*=s_inv; return *this; }
-  // ----------------------------------------------------------------------- accessors
-  T& operator[](int i) { return n[i]; }
-  const T& operator[](int i) const { return n[i]; }
-  T get(int i)const{return n[i];}
-  void set(T Xin, T Yin, T Zin){n[0]=Xin; n[1]=Yin; n[2]=Zin;}
-  // ----------------------------------------------------------------------- vector to vector operators
-  nvec3 operator-()const{return nvec3(-n[0],-n[1],-n[2]);}//unary
-  nvec3 operator+(const nvec3& v)const{return nvec3(n[0] + v.get(0), n[1] + v.get(1), n[2] + v.get(2));}
-  nvec3 operator-(const nvec3& v)const{return nvec3(n[0] - v.get(0), n[1] - v.get(1), n[2] - v.get(2));}
-  nvec3 operator*(const nvec3& v)const{return nvec3(n[0] * v.get(0), n[1] * v.get(1), n[2] * v.get(2));}
-  nvec3 operator/(const nvec3& v)const{return nvec3(n[0] / v.get(0), n[1] / v.get(1), n[2] / v.get(2));}
+  nvec3() noexcept : n{T(0), T(0), T(0)} {}
+  nvec3(T x, T y, T z) noexcept : n{x, y, z} {}
+  nvec3(const T s) noexcept : n{s, s, s} {}
+  nvec3(const nvec3& v){n[0]=v[0];n[1]=v[1];n[2]=v[2];}
+ // ----------------------------------------------------------------------- accessors
+ T& operator[](int i)noexcept{ return n[i]; }
+ const T& operator[](int i) const noexcept{ return n[i]; }
+ void set(T Xin, T Yin, T Zin){n[0]=Xin; n[1]=Yin; n[2]=Zin;}
+ // ----------------------------------------------------------------- compound operators
+  nvec3& operator += (const nvec3& v)noexcept{n[0]+=v[0]; n[1]+=v[1]; n[2]+=v[2]; return *this;}
+  nvec3& operator -= (const nvec3& v)noexcept{n[0]-=v[0]; n[1]-=v[1]; n[2]-=v[2]; return *this;}
+  nvec3& operator *= (const nvec3& v)noexcept{n[0]*=v[0]; n[1]*=v[1]; n[2]*=v[2]; return *this;}
+  nvec3& operator /= (const nvec3& v)noexcept{n[0]/=v[0]; n[1]/=v[1]; n[2]/=v[2]; return *this;}
+  nvec3& operator *= (T& s)noexcept{n[0]*=s; n[1]*=s; n[2]*=s; return *this;}
+  nvec3& operator /= (T& s)noexcept{auto s_inv = 1.0/s; n[0]*=s_inv; n[1]*=s_inv; n[2]*=s_inv; return *this; }
+   // ----------------------------------------------------------------------- vector to vector operators
+  nvec3 operator-()const noexcept{return nvec3(-n[0],-n[1],-n[2]);}//unary
+  nvec3 operator+(const nvec3& v)const{return nvec3(n[0] + v[0], n[1] + v[1], n[2] + v[2]);}
+  nvec3 operator-(const nvec3& v)const{return nvec3(n[0] - v[0], n[1] - v[1], n[2] - v[2]);}
+  nvec3 operator*(const nvec3& v)const{return nvec3(n[0] * v[0], n[1] * v[1], n[2] * v[2]);}
+  nvec3 operator/(const nvec3& v)const{return nvec3(n[0] / v[0], n[1] / v[1], n[2] / v[2]);}
   // ----------------------------------------------------------------------- vector to scalar operators
   nvec3 operator+(const T& s)const{return nvec3(n[0] + s, n[1] + s, n[2] + s);}
-  friend nvec3 operator+(const T& s, const nvec3& v){return nvec3(v.get(0)+s, v.get(1)+s, v.get(2)+s);}
+  friend nvec3 operator+(const T& s, const nvec3& v){return nvec3(v[0]+s, v[1]+s, v[2]+s);}
   nvec3 operator-(const T& s)const{return nvec3(n[0] - s, n[1] - s, n[2] - s);}
-  friend nvec3 operator-(const T& s, const nvec3& v){return nvec3(s-v.get(0), s-v.get(1), s-v.get(2));}
+  friend nvec3 operator-(const T& s, const nvec3& v){return nvec3(s-v[0], s-v[1], s-v[2]);}
   nvec3 operator*(const T& s)const{return nvec3(n[0] * s, n[1] * s, n[2] * s);}
-  friend nvec3 operator * (const T& s, const nvec3& v){return nvec3(v.get(0)*s, v.get(1)*s, v.get(2)*s);}
+  friend nvec3 operator * (const T& s, const nvec3& v){return nvec3(v[0]*s, v[1]*s, v[2]*s);}
   nvec3 operator / (const T& s)const{double s_inv = 1.0/s;return nvec3(n[0]*s_inv, n[1]*s_inv, n[2]*s_inv);}
-  friend nvec3 operator / (const T& s, const nvec3& v){return nvec3(s/v.get(0), s/v.get(1), s/v.get(2));}
+  friend nvec3 operator / (const T& s, const nvec3& v){return nvec3(s/v[0], s/v[1], s/v[2]);}
   // ----------------------------------------------------------------------- equality operators
-  bool operator == (const nvec3& v)const{return (n[0]==v.get(0)) && (n[1]==v.get(1)) && (n[2]==v.get(2));}
+  bool operator == (const nvec3& v)const{return (n[0]==v[0]) && (n[1]==v[1]) && (n[2]==v[2]);}
   bool operator != (const nvec3& v)const{return !(*this==v);}
   // ----------------------------------------------------------------------- utility functions
   // print
-  friend std::ostream& operator << (std::ostream& s, const nvec3& v){return s<<"("<<v.get(0)<<", "<<v.get(1)<<", "<<v.get(2)<<")";}
-  // mathematical
-  T length2()const{return n[0]*n[0] + n[1]*n[1] + n[2]*n[2];}
-  T length()const{return sqrt(length2());}
-  nvec3& normalize(){(*this) /= length();return *this;}
-  nvec3 normalized()const{T L = length(); return nvec3(n[0]/L,n[1]/L,n[2]/L);}
-  T dot(const nvec3& v)const{return (n[0]*v.get(0) + n[1]*v.get(1) + n[2]*v.get(2));}
-  nvec3 cross(const nvec3& v)const{return nvec3(n[1]*v.get(2) - n[2]*v.get(1),n[2]*v.get(0) - n[0]*v.get(2),n[0]*v.get(1) - n[1]*v.get(0));}
+  friend std::ostream& operator << (std::ostream& s, const nvec3& v){return s<<"("<<v[0]<<", "<<v[1]<<", "<<v[2]<<")";}
+  // math
+  T length2()const noexcept{return n[0]*n[0] + n[1]*n[1] + n[2]*n[2];}
+  T length()const noexcept{return sqrt(length2());}
+  nvec3& normalize()noexcept{(*this) /= length();return *this;}
+  nvec3 normalized()const noexcept{T L = length(); return nvec3(n[0]/L,n[1]/L,n[2]/L);}
+  T dot(const nvec3& v)const noexcept{return (n[0]*v[0] + n[1]*v[1] + n[2]*v[2]);}
+  nvec3 cross(const nvec3& v)const noexcept{return nvec3(n[1]*v[2] - n[2]*v[1],n[2]*v[0] - n[0]*v[2],n[0]*v[1] - n[1]*v[0]);}
   // linear interpolation
-  nvec3 lerp(nvec3& v, const T& t)const{return (*this) + t*(v-(*this));}
+  nvec3 lerp(nvec3& v, const T& t)const noexcept{return (*this) + t*(v-(*this));}
+  bool almostEqual(const nvec3& v,T eps)const noexcept{
+   return std::fabs(n[0]-v.n[0]) <= eps && std::fabs(n[1]-v.n[1]) <= eps && std::fabs(n[2]-v.n[2]) <= eps;}
+
  private:
   T n[3];
 };

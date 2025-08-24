@@ -2,7 +2,7 @@
 
 This simple vector/matrix library is designed to be header only with no dependencies.
 
-**This was written with the goals of brevity and ease of use, there is no error checking, this was not optimized for execution speed or mimimizing RAM usage. this was not written to handle every possible requirement. this is not documented, or written for ease of comprehension, nor are there many comments.**
+**This was written with the goals of brevity and ease of use, there is no error checking, focus on utility. Brevity > features.**
 
 the goal was to keep each header under 100 lines of code. It's close to successful by this measure.
 
