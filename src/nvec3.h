@@ -23,7 +23,9 @@ class nvec3
   nvec3() noexcept : n{T(0), T(0), T(0)} {}
   nvec3(T x, T y, T z) noexcept : n{x, y, z} {}
   nvec3(const T s) noexcept : n{s, s, s} {}
-  nvec3(const nvec3& v){n[0]=v[0];n[1]=v[1];n[2]=v[2];}
+  // nvec3(const nvec3& v){n[0]=v[0];n[1]=v[1];n[2]=v[2];}
+  nvec3(const nvec3&) = default;
+  nvec3(nvec3&&) noexcept = default;
  // ----------------------------------------------------------------------- accessors
  T& operator[](int i)noexcept{ return n[i]; }
  const T& operator[](int i) const noexcept{ return n[i]; }
@@ -41,6 +43,7 @@ class nvec3
   nvec3 operator-(const nvec3& v)const{return nvec3(n[0] - v[0], n[1] - v[1], n[2] - v[2]);}
   nvec3 operator*(const nvec3& v)const{return nvec3(n[0] * v[0], n[1] * v[1], n[2] * v[2]);}
   nvec3 operator/(const nvec3& v)const{return nvec3(n[0] / v[0], n[1] / v[1], n[2] / v[2]);}
+  nvec3& operator=(const nvec3<T>& v){n[0]=v[0];n[1]=v[1];n[2]=v[2];return *this;}
   // ----------------------------------------------------------------------- vector to scalar operators
   nvec3 operator+(const T& s)const{return nvec3(n[0] + s, n[1] + s, n[2] + s);}
   friend nvec3 operator+(const T& s, const nvec3& v){return nvec3(v[0]+s, v[1]+s, v[2]+s);}

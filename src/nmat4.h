@@ -25,7 +25,7 @@ public:
   nmat4(){this->identity();}
   nmat4(const T& s){for(int i=0; i<16; ++i)n[i]=s;}
   nmat4(const nmat4& m){for(int i=0; i<16; ++i)n[i]=m[i];}
-  nmat4(const nmat3<T>& m){for(int i=0; i<3; ++i)for(int j=0; j<3; ++j)n(i,j)=m(i,j);}
+  nmat4(const nmat3<T>& m){for(int i=0; i<3; ++i)for(int j=0; j<3; ++j)(i,j)=m(i,j);}
   // ----------------------------------------------- element access
   nmat4& operator += (const nmat4& m){for(int i=0; i<16; ++i)n[i]+=m[i];return *this;}
   nmat4& operator -= (const nmat4& m){for(int i=0; i<16; ++i)n[i]-=m[i];return *this;}
@@ -42,7 +42,7 @@ public:
   T rowVMult(int index, const nvec3<T>& v)const{T out = T(0.0);for(int i=0;i<3;++i)out+=n[(index*4)+i]*v[i];return out+n[(index*4)+3];}// perhaps private?
   friend nvec3<T> operator*(const nmat4& m, const nvec3<T>& v){nvec3<T> out;for(int i=0;i<3;++i)out[i]=m.rowVMult(i,v);return out/m.rowVMult(3,v);}
   // ------------------------------------------- matrix4 matrix3 operator
-  nmat4 operator=(const nmat3<T>& m)const{nmat4 out;for(int i=0; i<3; ++i)for(int j=0; j<3; ++j)out(i,j)=m(i,j);;return out;}
+  nmat4& operator=(const nmat3<T>& m){this->identity();for(int i=0; i<3; ++i)for(int j=0; j<3; ++j)(*this)(i,j)=m(i,j);;return *this;}
   // ------------------------------------------- matrix4 matrix4 operators
   nmat4 operator+(const nmat4& m)const{nmat4 out;for(int i=0; i<16; ++i)out[i]=n[i]+m[i];return out;}
   nmat4 operator-(const nmat4& m)const{nmat4 out;for(int i=0; i<16; ++i)out[i]=n[i]-m[i];return out;}
@@ -58,10 +58,10 @@ public:
   void setVecRow(int i,const nvec3<T> v){n[(4*i)+0]=v[0]; n[(4*i)+1]=v[1]; n[(4*i)+2]=v[2];}
   // ------------------------------------------ utility functions
   friend std::ostream& operator << (std::ostream& s, const nmat4& m){
-    s<<"\n("<<m.n[0]<<", "<<m.n[1]<<", "<<m.n[2]<<", "<<m.n[3]<<")";
-    s<<"\n("<<m.n[4]<<", "<<m.n[5]<<", "<<m.n[6]<<", "<<m.n[7]<<")";
-    s<<"\n("<<m.n[8]<<", "<<m.n[9]<<", "<<m.n[10]<<", "<<m.n[11]<<")";
-    s<<"\n("<<m.n[12]<<", "<<m.n[13]<<", "<<m.n[14]<<", "<<m.n[15]<<")";
+    s<<"\n("<<m.n[0]<<", "<<m.n[4]<<", "<<m.n[8]<<", "<<m.n[12]<<")";
+    s<<"\n("<<m.n[1]<<", "<<m.n[5]<<", "<<m.n[9]<<", "<<m.n[13]<<")";
+    s<<"\n("<<m.n[2]<<", "<<m.n[6]<<", "<<m.n[10]<<", "<<m.n[14]<<")";
+    s<<"\n("<<m.n[3]<<", "<<m.n[7]<<", "<<m.n[11]<<", "<<m.n[15]<<")";
     return s;}
   void identity(){
     n[0] =1;n[1] =0;n[2] =0;n[3] =0;
@@ -90,7 +90,7 @@ public:
     nmat4<T> Mr, result(0); Mr.setRotation(Rot);
     for(int i=0;i<4;++i)for(int j=0;j<4;++j)for(int k=0;k<4;++k)result(i,j)+=get(i,k)*Mr.get(k,j);
     set(result);}
-  void translate(const nvec3<T>& v){n[12]+=v[0]; n[13]+=v[1]; n[14]+=v[2];}
+  void translate(const nvec3<T>& v){n[3]+=v[0]; n[7]+=v[1]; n[11]+=v[2];}
   void scale(const nvec3<T>& v){for(int r=0; r<3; ++r){for(int c=0; c<3; ++c){n[(r*4)+c] *= v[c];}}}
   void transpose(){
     nmat4<T> holder;
@@ -138,7 +138,20 @@ public:
     T cosXangle = cos(-Rot[0]);
     Rot[2] = -atan2(cosXangle * (get(1,0)/Scl[0]) + sinXangle * (get(2,0)/Scl[0]), cosXangle * (get(1,1)/Scl[1]) + sinXangle * (get(2,1)/Scl[1]));
   }
-  void lookat(const nvec3<T>& from, const nvec3<T>& to){nvec3<T> look=(to-from).normalized();nmat3<T> m3;m3.lookat(look);*this=m3;*this.translate(from);}
+  void lookat(const nvec3<T>& from, const nvec3<T>& to) {nvec3<T> look=(to-from).normalized();nmat3<T> m3;m3.lookat(look,nvec3<T>(0,1,0));*this=m3;this->translate(from);
+
+    nvec3<T> foo(0,0,0);
+    foo = *this*foo;
+    std::cout << "m4 " << *this << std::endl;
+    std::cout << "m3 " << m3<<std::endl;
+    std::cout << "foo inner" << foo << "  " << from << "\n";
+    std::cout << "   LOOK " <<look << "\n";
+    nvec3<T> bar = m3*nvec3<T>(0,0,1);
+    std::cout << "   mult " << bar << "\n";
+    nmat4<T> mfoo = m3;
+    nvec3<T> ree = mfoo*nvec3<T>(0,0,1);
+    std::cout << "   mult4 " << bar << "\n";
+  }
 private:
   T n[16];
 };

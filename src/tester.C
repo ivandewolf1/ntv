@@ -265,11 +265,35 @@ nmat4Test(){
 
 }
 
+void
+nquatTest() {
+  nquat<float> A;
+  nquat<float> B(0.578591,	0.578591,	0.578591,	0.815618);
+  nvec3<float> imag(0.578591,	0.578591,	0.578591);
+  nquat<float> C(0.815618, imag);
+  B.normalize();
+  nquat<float> D(B);
+  std::cout <<"Quats: "<<A<<", "<<B<<", "<<C<<", "<<D<<std::endl;
+  std::cout << " MULT: " << A * B << std::endl;
+  A.fromAxisAngle(nvec3<float>(1,1,1), 1.0);
+  std::cout << "faa: " << A << std::endl;
+  nvec3<float> toV(13, 3, 2);
+  nvec3<float> zeeV(0,0,1);
+  nquat<float> qLook;
+  qLook.RotateFromTo(zeeV, toV);
+  nquat<float> q;
+  q = q.slerp(qLook,.1234);
+  nvec3<float> arbitratry(1,2,3);
+  nvec3<float> foo = q * arbitratry;
+  std::cout <<"foo: "<<foo<<std::endl;
+  std::cout <<"qs: "<<q<<" "<<qLook<<std::endl;
+}
 int main()
 {
   tvecTest();
   nmat3Test();
   nmat4Test();
+  nquatTest();
   return 0;
 }
 

@@ -23,37 +23,42 @@ namespace ntv {
     public:
         // ------------------------------------------------- constructors
         nquat(){this->identity();}
-        nquat(T r,T i,T j,T k)noexcept:n{r, i, j, k} {}
-        nquat(T r,nvec3<T> ijk)noexcept:n{r, ijk[0], ijk[1], ijk[2]} {}
+        nquat(T i,T j,T k, T r)noexcept:n{i, j, k, r} {}
+        nquat(T r,nvec3<T> ijk)noexcept:n{ijk[0], ijk[1], ijk[2], r} {}
+        nquat(const nquat&) = default;
+        nquat(nquat&&) noexcept = default;
         // ----------------------------------------------- element access operators
         T& operator [] (int i){return n[i];}
         const T& operator[](int i)const{return n[i];}
-        void set(T r, const nvec3<T> ijk)noexcept{n[0]=r;n[1]=ijk[0];n[2]=ijk[1];n[3]=ijk[2];}
-        T real()const noexcept{return n[0];}//real, scalar component of this quaternion
-        nvec3<T> imag()const noexcept{return nvec3<T>(n[1],n[2],n[3]);}//imaginary, vector component of this quaternion
+        void set(T r, const nvec3<T> ijk)noexcept{n[0]=ijk[0];n[1]=ijk[1];n[2]=ijk[2];n[3]=r;}
+        T real()const noexcept{return n[3];}//real, scalar component of this quaternion
+        nvec3<T> imag()const noexcept{return nvec3<T>(n[0],n[1],n[2]);}//imaginary, vector component of this quaternion
         // ---------------------------------------------- mutators
         nquat& operator *= (const T& s){n[0]*=s;n[1]*=s;n[2]*=s;n[3]*=s;return *this;}
-        void identity()noexcept{n[0]=1;n[1]=0;n[2]=0;n[3]=0;}
+        void identity()noexcept{n[0]=0;n[1]=0;n[2]=0;n[3]=1;}
         void normalize(){*this=this->normalized();}
-        void fromAxisAngle(const nvec3<T>& axis, T angle){T halfAngle=0.5*angle;set(cos(halfAngle),axis.Normalized()*sin(halfAngle));}
+        void fromAxisAngle(const nvec3<T>& axis, T angle){T halfAngle=0.5*angle;set(cos(halfAngle),axis.normalized()*sin(halfAngle));}
         // ----------------------------------------------- builders
-        nquat normalized()const{nquat q(*this);q*=1/q.length();return q;}// assuumes nonzero length
-        nquat conjugate()const noexcept{return nquat(n[0], -n[1], -n[2], -n[3]);}// assumes unit length input
+        nquat normalized()const{nquat q(*this);q*=1/q.length();return q;}// assumes initial nonzero length
+        nquat conjugate()const noexcept{return nquat(-n[0], -n[1], -n[2], n[3]);}// assumes unit length input
         // ------------------------------------------- quaternion vector operator (rotate vector)
-        nvec3<T> operator*(const nvec3<T>& v)const{T rr=n[0]+n[0];return rr*imag().cross(v)+(rr*n[0]-1)*v+2*imag().dot(v)*imag();}
+        nvec3<T> operator*(const nvec3<T>& v)const{T rr=real()+real();return rr*imag().cross(v)+(rr*real()-1)*v+2*imag().dot(v)*imag();}
         // ----------------------------------------- quaternion quaternion operator
-        friend nquat operator*(const nquat& qA,const nquat& qB){return nquat(qA.dot(qB),qA.real()*qB.real()+qB.real()*qA.imag()+qA.imag().cross(qB.imag()));}
-        // --------------------------------------------- utility functions
-        friend std::ostream& operator << (std::ostream& s, const nquat<T>& q){s<<"\n("<<q.n[0]<<", "<<q.n[1]<<", "<<q.n[2]<<")"<<", "<<q.n[3]<<")";return s;}
+        friend nquat operator*(const nquat& qA,const nquat& qB) {T r = qA.real()*qB.real()-qA.imag().dot(qB.imag());
+            nvec3<T> i = qA.real()*qB.imag()+qB.real()*qA.imag()+qA.imag().cross(qB.imag());return nquat(r,i);}
+        nquat& operator=(const nquat<T>& q){n[0]=q[0];n[1]=q[1];n[2]=q[2];n[3]=q[3];return *this;}
+       // --------------------------------------------- utility functions
+        friend std::ostream& operator << (std::ostream& s, const nquat<T>& q){s<<"\n("<<q.n[0]<<", "<<q.n[1]<<", "<<q.n[2]<<", "<<q.n[3]<<")";return s;}
         T length2() const noexcept {return n[0]*n[0] + n[1]*n[1] + n[2]*n[2] + n[3]*n[3];}
         T length() const noexcept {return std::sqrt(length2());}
         T dot(const nquat& qB)const noexcept{return real()*qB.real()+imag().dot(qB.imag());}
-        nquat scaleAngle(T s)const {nvec3<T> axis;T angle;toAxisAngle(axis,angle);nquat q(*this);q.fromAxisAngle(axis,angle*s);return q;}
-        void toAxisAngle(nvec3<T>& axis, T& angle)const{axis=real()>0?imag():-imag();angle=2.0*atan2(axis.normalized(),real()>0?real():-real());}
-        nquat slerp(const nquat& q2,T tau)const{if(*this.dot(q2)>0.999999f)return nquat(*this*(1-tau)+q2*tau);return *this*((*this.conjugate() * q2) * tau);}
-        nvec3<T> perpendicular(const nvec3<T>& v)const{nvec3<T> axis = nvec3(1,0,0).cross(v);if(axis.length2()<0.05)axis=nvec3(0,1,0).cross(v);return axis;}
-        void RotateFromTo(const nvec3<T>& v1, const nvec3<T>& v2) {
-            nvec3<T> start = v1.Normalized();nvec3<T> end = v2.Normalized();T dot_product = start.dot(end);
+        nquat scaleAngle(T s)const {nvec3<T> axis;T angle;toAxisAngle(axis,angle);nquat q;q.fromAxisAngle(axis,angle*s);return q;}
+        void toAxisAngle(nvec3<T>& axis, T& angle)const {axis = real() > 0.0 ? imag() : -imag();
+            if(axis.length2()==0){axis.set(1,0,0),angle=0;return;}angle=2.0*atan2(axis.length2(),real()>0?real():-real());}
+        nquat slerp(const nquat& q2,T tau)const {if(this->dot(q2)>0.999999f)return (this->scaleAngle(1-tau)*q2.scaleAngle(tau)).normalized();
+            return (*this*((this->conjugate() * q2).scaleAngle(tau))).normalized();}
+        nvec3<T> perpendicular(const nvec3<T>& v)const{nvec3<T> axis = nvec3<T>(1,0,0).cross(v);if(axis.length2()<0.05)axis=nvec3<T>(0,1,0).cross(v);return axis;}
+        void RotateFromTo(const nvec3<T>& v1, const nvec3<T>& v2) {nvec3<T> start = v1.normalized();nvec3<T> end = v2.normalized();T dot_product = start.dot(end);
             if (dot_product >= 0.99999847691) {identity();return;}if (dot_product <= -0.99999847691) {perpendicular(start);return;}
             nvec3<T> crossProd = start.cross(end);set(1.0 + dot_product, crossProd);normalize();}
     private:
