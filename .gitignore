@@ -7,4 +7,4 @@ cmake-build-debug
 \#*\#
 .\#*
 tests/backup
-/tests/rayTracingInOneWeekend/2._Output_an_Image/test.exr
+/tests/rayTracingInOneWeekend/*/test.exr
