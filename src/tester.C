@@ -138,7 +138,7 @@ nmat3Test(){
   VA.set(1,2,3);
   VB.set(4,5,6);
   VC.set(7,8,9);
-  A.set(VA,VB,VC);
+  A.setRows(VA,VB,VC);
   B.setRow(1, VB);
   VA = A.getRow(2);
   cout <<"results:"<<A<<", \n"<<B<<",  "<<VA<<endl;

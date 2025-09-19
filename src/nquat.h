@@ -36,8 +36,8 @@ namespace ntv {
         // ---------------------------------------------- mutators
         nquat& operator *= (const T& s){n[0]*=s;n[1]*=s;n[2]*=s;n[3]*=s;return *this;}
         void identity()noexcept{n[0]=0;n[1]=0;n[2]=0;n[3]=1;}
-        void normalize(){*this=this->normalized();}
-        void fromAxisAngle(const nvec3<T>& axis, T angle){T halfAngle=0.5*angle;set(cos(halfAngle),axis.normalized()*sin(halfAngle));}
+        void normalize(){*this*=1/this->length();}
+        void fromAxisAngle(const nvec3<T>& axis, T angle){T halfAngle=0.5*angle;set(cos(halfAngle),axis.normalized()*sin(halfAngle));normalize();}
         // ----------------------------------------------- builders
         nquat normalized()const{nquat q(*this);q*=1/q.length();return q;}// assumes initial nonzero length
         nquat conjugate()const noexcept{return nquat(-n[0], -n[1], -n[2], n[3]);}// assumes unit length input
@@ -52,20 +52,35 @@ namespace ntv {
         T length2() const noexcept {return n[0]*n[0] + n[1]*n[1] + n[2]*n[2] + n[3]*n[3];}
         T length() const noexcept {return std::sqrt(length2());}
         T dot(const nquat& qB)const noexcept{return real()*qB.real()+imag().dot(qB.imag());}
-        nquat scaleAngle(T s)const {nvec3<T> axis;T angle;toAxisAngle(axis,angle);nquat q;q.fromAxisAngle(axis,angle*s);return q;}
-        void toAxisAngle(nvec3<T>& axis, T& angle)const {axis = real() > 0.0 ? imag() : -imag();
-            if(axis.length2()==0){axis.set(1,0,0),angle=0;return;}angle=2.0*atan2(axis.length2(),real()>0?real():-real());}
-        nquat slerp(const nquat& q2,T tau)const {if(this->dot(q2)>0.999999f)return (this->scaleAngle(1-tau)*q2.scaleAngle(tau)).normalized();
-            return (*this*((this->conjugate() * q2).scaleAngle(tau))).normalized();}
-        nvec3<T> perpendicular(const nvec3<T>& v)const{nvec3<T> axis = nvec3<T>(1,0,0).cross(v);if(axis.length2()<0.05)axis=nvec3<T>(0,1,0).cross(v);return axis;}
-        void RotateFromTo(const nvec3<T>& v1, const nvec3<T>& v2) {nvec3<T> start = v1.normalized();nvec3<T> end = v2.normalized();T dot_product = start.dot(end);
-            if (dot_product >= 0.99999847691) {identity();return;}if (dot_product <= -0.99999847691) {perpendicular(start);return;}
+
+        nquat scaleAngle(T s) const {
+            nvec3<T> axis; T angle; toAxisAngle(axis, angle);
+            nquat q; q.fromAxisAngle(axis, angle * s); return q;}
+        void toAxisAngle(nvec3<T>& axis, T& angle) const {
+            axis=real()>=T(0)?imag():-imag(); T v2=axis.length();
+            if (v2 == T(0)) {axis.set(1,0,0); angle=0; return;}
+            axis.normalize(); T wabs=real()>=T(0)?real():-real(); angle=T(2)*atan2(v2,wabs);}
+        nquat slerp(const nquat& q2, T tau) const {
+            nquat qa=this->normalized(); nquat qb=q2.normalized(); T d=qa.dot(qb); if (d<T(0)){qb*=T(-1); d=-d; }
+            if (d > T(0.9995)) {const T Tinv=T(1)-tau;
+                nquat res(qa[0]*Tinv+qb[0]*tau,qa[1]*Tinv+qb[1]*tau,qa[2]*Tinv+qb[2]*tau,qa[3]*Tinv+qb[3]*tau);
+                return res.normalized();}
+            nquat rel = (qa.conjugate() * qb).scaleAngle(tau); return qa * rel;}
+        nvec3<T> perpendicular(const nvec3<T>& v)const {
+            nvec3<T> axis = nvec3<T>(1,0,0).cross(v);
+            if(axis.length2()<0.05)axis=nvec3<T>(0,1,0).cross(v);
+            return axis;}
+        void RotateFromTo(const nvec3<T> &v1,const nvec3<T> &v2){
+            nvec3<T> start=v1.normalized();nvec3<T> end=v2.normalized();T dot_product=start.dot(end);
+            if(dot_product>=0.99999847691){identity();return;}
+            if(dot_product<=-0.99999847691){perpendicular(start);return;}
             nvec3<T> crossProd = start.cross(end);set(1.0 + dot_product, crossProd);normalize();}
     private:
         T n[4];
     };
 } //end ntv namespace
 #endif
+
 
 //Copyright 2025 Ivan DeWolf
 //Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:

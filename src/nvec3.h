@@ -62,8 +62,8 @@ class nvec3
   // math
   T length2()const noexcept{return n[0]*n[0] + n[1]*n[1] + n[2]*n[2];}
   T length()const noexcept{return sqrt(length2());}
-  nvec3& normalize()noexcept{(*this) /= length();return *this;}
-  nvec3 normalized()const noexcept{T L = length(); return nvec3(n[0]/L,n[1]/L,n[2]/L);}
+  nvec3& normalize()noexcept{T L2=length2();if(L2<1e-6)return *this;(*this) /= std::sqrt(L2);return *this;}
+  nvec3 normalized()const noexcept{T L = length(); if (L<1e-6)L=1e-6;return nvec3(n[0]/L,n[1]/L,n[2]/L);}
   T dot(const nvec3& v)const noexcept{return (n[0]*v[0] + n[1]*v[1] + n[2]*v[2]);}
   nvec3 cross(const nvec3& v)const noexcept{return nvec3(n[1]*v[2] - n[2]*v[1],n[2]*v[0] - n[0]*v[2],n[0]*v[1] - n[1]*v[0]);}
   // linear interpolation

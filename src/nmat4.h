@@ -1,5 +1,5 @@
 
-// Lightweight templated matrix3 library
+// nano templated matrix4 library
 // Dec 2019
 // Ivan DeWolf
 //
@@ -43,6 +43,7 @@ public:
   friend nvec3<T> operator*(const nmat4& m, const nvec3<T>& v){nvec3<T> out;for(int i=0;i<3;++i)out[i]=m.rowVMult(i,v);return out/m.rowVMult(3,v);}
   // ------------------------------------------- matrix4 matrix3 operator
   nmat4& operator=(const nmat3<T>& m){this->identity();for(int i=0; i<3; ++i)for(int j=0; j<3; ++j)(*this)(i,j)=m(i,j);;return *this;}
+  nmat3<T> asM3()const{nmat3<T> out;for(int i=0; i<3; ++i)for(int j=0; j<3; ++j)out(i,j)=n[(i*4)+j];return out;}
   // ------------------------------------------- matrix4 matrix4 operators
   nmat4 operator+(const nmat4& m)const{nmat4 out;for(int i=0; i<16; ++i)out[i]=n[i]+m[i];return out;}
   nmat4 operator-(const nmat4& m)const{nmat4 out;for(int i=0; i<16; ++i)out[i]=n[i]-m[i];return out;}
@@ -92,10 +93,10 @@ public:
     set(result);}
   void translate(const nvec3<T>& v){n[3]+=v[0]; n[7]+=v[1]; n[11]+=v[2];}
   void scale(const nvec3<T>& v){for(int r=0; r<3; ++r){for(int c=0; c<3; ++c){n[(r*4)+c] *= v[c];}}}
-  void transpose(){
+  nmat4& transpose(){
     nmat4<T> holder;
     for(int c=0;c<4;++c)for(int r=0;r<4;++r)holder(c,r) = n[(r*4) + c];
-    for(int i=0; i<16; ++i)n[i] = holder[i];}
+    for(int i=0; i<16; ++i)n[i] = holder[i]; return *this;}
   T determinant2d(int a, int b, int c, int d)const{return n[a] * n[d] - n[c] * n[b];}
   T determinant()const{
     T ab=determinant2d(8,12,9,13);
@@ -129,45 +130,19 @@ public:
 	  out.transpose();return out;}
   nmat4 inverse()const{return adjoint() * (1.0/determinant());}
   void extract(nvec3<T>& Trans,nvec3<T>& Rot,nvec3<T>& Scl)const{
-    for(int i=0; i<3; ++i)Scl[i] = getColVec3(i).length();
-    Trans = getRowVec3(3);
-    Rot[0] = -atan2(-(get(1,2)/Scl[2]), (get(2,2)/Scl[2]));
-    T cosYangle = sqrt(pow((get(0,0)/Scl[0]), 2) + pow((get(0,1)/Scl[1]), 2));
-    Rot[1] = -atan2((get(0,2)/Scl[2]), cosYangle);
-    T sinXangle = sin(-Rot[0]);
-    T cosXangle = cos(-Rot[0]);
+    for(int i=0; i<3; ++i)Scl[i] = getColVec3(i).length();Trans = getRowVec3(3);Rot[0] = -atan2(-(get(1,2)/Scl[2]), (get(2,2)/Scl[2]));
+    T cosYangle = sqrt(pow((get(0,0)/Scl[0]), 2) + pow((get(0,1)/Scl[1]), 2));Rot[1] = -atan2((get(0,2)/Scl[2]), cosYangle);
+    T sinXangle = sin(-Rot[0]);T cosXangle = cos(-Rot[0]);
     Rot[2] = -atan2(cosXangle * (get(1,0)/Scl[0]) + sinXangle * (get(2,0)/Scl[0]), cosXangle * (get(1,1)/Scl[1]) + sinXangle * (get(2,1)/Scl[1]));
   }
-  void lookat(const nvec3<T>& from, const nvec3<T>& to) {nvec3<T> look=(to-from).normalized();nmat3<T> m3;m3.lookat(look,nvec3<T>(0,1,0));*this=m3;this->translate(from);
-
-    nvec3<T> foo(0,0,0);
-    foo = *this*foo;
-    std::cout << "m4 " << *this << std::endl;
-    std::cout << "m3 " << m3<<std::endl;
-    std::cout << "foo inner" << foo << "  " << from << "\n";
-    std::cout << "   LOOK " <<look << "\n";
-    nvec3<T> bar = m3*nvec3<T>(0,0,1);
-    std::cout << "   mult " << bar << "\n";
-    nmat4<T> mfoo = m3;
-    nvec3<T> ree = mfoo*nvec3<T>(0,0,1);
-    std::cout << "   mult4 " << bar << "\n";
-  }
+  void lookat(const nvec3<T>& from, const nvec3<T>& to) {nvec3<T> look=(to-from).normalized();nmat3<T> m3;m3.lookat(look,nvec3<T>(0,1,0));*this=m3;this->translate(from);}
 private:
   T n[16];
 };
 } //end ntv namespace
 #endif
 
-// determinant hint:
-//  1 | 2 | 3 | 4 
-// ##########------
-//  A | B | C | D
-// ##########------
-//  a | b | c | d   
-// -|---|---|---|--
-//  a | b | c | d 
-
-//Copyright 2019 Ivan DeWolf
+//Copyright 2025 Ivan DeWolf
 //Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 //The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 //THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
